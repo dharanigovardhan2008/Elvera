@@ -3,7 +3,6 @@ import toast from 'react-hot-toast';
 import { useAuthContext } from './AuthContext';
 import { userService } from '@/lib/firebase/user';
 import { analyticsService } from '@/lib/firebase/analytics';
-import { useNavigate } from 'react-router-dom';
 
 interface AppState {
   favorites: string[];
@@ -13,8 +12,8 @@ interface AppState {
 }
 
 interface AppContextType extends AppState {
-  toggleFavorite: (productId: string) => Promise<void>;
-  toggleBag: (productId: string) => Promise<void>;
+  toggleFavorite: (productId: string, requireLogin?: boolean) => Promise<boolean>;
+  toggleBag: (productId: string, requireLogin?: boolean) => Promise<boolean>;
   trackClick: (productId: string, productTitle: string, platform: string) => void;
   refreshUserData: () => Promise<void>;
 }
@@ -76,12 +75,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const toggleFavorite = async (productId: string) => {
-    // ✅ REQUIRE LOGIN
-    if (!user) {
+  const toggleFavorite = async (productId: string, requireLogin: boolean = true): Promise<boolean> => {
+    // ✅ Check if login is required (ProductCard sets this to true)
+    if (requireLogin && !user) {
       toast.error('Please login to add favorites');
-      // Don't redirect here - let ProductCard handle it
-      throw new Error('LOGIN_REQUIRED');
+      return false; // Return false to signal login required
+    }
+
+    // If user is not logged in but requireLogin is false, do nothing
+    if (!user) {
+      return false;
     }
 
     const isFav = state.favorites.includes(productId);
@@ -99,6 +102,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Sync to Firebase
     try {
       await userService.toggleFavorite(user.uid, productId);
+      return true;
     } catch (error) {
       console.error('Error syncing favorite:', error);
       // Revert on error
@@ -109,15 +113,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           : s.favorites.filter((id) => id !== productId),
       }));
       toast.error('Failed to sync. Please try again.');
+      return false;
     }
   };
 
-  const toggleBag = async (productId: string) => {
-    // ✅ REQUIRE LOGIN
-    if (!user) {
+  const toggleBag = async (productId: string, requireLogin: boolean = true): Promise<boolean> => {
+    // ✅ Check if login is required (ProductCard sets this to true)
+    if (requireLogin && !user) {
       toast.error('Please login to add items to bag');
-      // Don't redirect here - let ProductCard handle it
-      throw new Error('LOGIN_REQUIRED');
+      return false; // Return false to signal login required
+    }
+
+    // If user is not logged in but requireLogin is false, do nothing
+    if (!user) {
+      return false;
     }
 
     const inBag = state.bag.includes(productId);
@@ -137,6 +146,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else {
         await userService.addToCart(user.uid, productId, 1);
       }
+      return true;
     } catch (error) {
       console.error('Error syncing bag:', error);
       // Revert on error
@@ -145,11 +155,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bag: inBag ? [...s.bag, productId] : s.bag.filter((id) => id !== productId),
       }));
       toast.error('Failed to sync. Please try again.');
+      return false;
     }
   };
 
   const trackClick = (productId: string, productTitle: string, platform: string) => {
-    // ✅ ALLOW GUESTS TO TRACK CLICKS (for analytics)
     setState((s) => ({
       ...s,
       clicks: [
