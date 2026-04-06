@@ -81,7 +81,7 @@ export const ROUTES = {
   SIGNUP: '/signup',
   PROFILE: '/profile',
   FAVORITES: '/favorites',
-  CART: '/cart',
+  CART: '/bag',
   ADMIN: '/admin',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_PRODUCTS: '/admin/products',
