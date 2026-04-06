@@ -1,98 +1,234 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useAppContext } from '../context/AppContext';
-import { ArrowRight, User } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mail, Lock, User, LogIn } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useAuthContext } from '@/context/AuthContext';
 
 export default function Login() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { login } = useAppContext();
   const navigate = useNavigate();
+  const { signIn, signUp, signInWithGoogle } = useAuthContext();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login({ name: 'Guest User', email });
-    navigate('/dashboard');
+
+    if (!formData.email || !formData.password) {
+      toast.error('Please fill all fields');
+      return;
+    }
+
+    if (isSignUp && !formData.name) {
+      toast.error('Please enter your name');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      if (isSignUp) {
+        // Sign Up
+        const result = await signUp(formData.email, formData.password, formData.name);
+        
+        if (result.success) {
+          toast.success('Account created successfully!');
+          navigate('/');
+        } else {
+          toast.error(result.error || 'Failed to create account');
+        }
+      } else {
+        // Sign In
+        const result = await signIn(formData.email, formData.password);
+        
+        if (result.success) {
+          toast.success('Welcome back!');
+          navigate('/');
+        } else {
+          toast.error(result.error || 'Invalid credentials');
+        }
+      }
+    } catch (error: any) {
+      console.error('Auth error:', error);
+      toast.error(error.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+
+    try {
+      const result = await signInWithGoogle();
+      
+      if (result.success) {
+        toast.success('Signed in with Google!');
+        navigate('/');
+      } else {
+        toast.error(result.error || 'Google sign-in failed');
+      }
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      toast.error(error.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <motion.main 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0 }}
-      className="min-h-screen pt-32 pb-20 flex items-center justify-center px-6"
-    >
-      <div className="w-full max-w-md bg-white border border-zinc-200 rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_60px_rgb(0,0,0,0.06)] relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-zinc-200 via-zinc-800 to-zinc-200"></div>
-        <div className="flex items-center justify-center w-16 h-16 bg-zinc-100 rounded-full mb-8 mx-auto border border-zinc-200">
-          <User className="w-6 h-6 text-zinc-600" />
-        </div>
-        <h1 className="text-3xl font-serif font-bold text-center text-text mb-2 tracking-wide">
-          {isLogin ? 'Welcome Back' : 'Join ELVERA'}
-        </h1>
-        <p className="text-center text-zinc-500 text-sm font-medium mb-10 tracking-wide">
-          {isLogin ? 'Access your saved pieces and click history' : 'Create an account to save pieces'}
-        </p>
-
-        <div className="flex items-center justify-center bg-zinc-100 p-1.5 rounded-capsule mb-8 border border-zinc-200">
-          <button 
-            onClick={() => setIsLogin(true)}
-            className={`flex-1 py-3 text-xs font-bold tracking-widest uppercase rounded-capsule transition-all ${isLogin ? 'bg-white text-text shadow-sm' : 'text-zinc-500 hover:text-text'}`}
-          >
-            Login
-          </button>
-          <button 
-            onClick={() => setIsLogin(false)}
-            className={`flex-1 py-3 text-xs font-bold tracking-widest uppercase rounded-capsule transition-all ${!isLogin ? 'bg-white text-text shadow-sm' : 'text-zinc-500 hover:text-text'}`}
-          >
-            Sign Up
-          </button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md w-full space-y-8"
+      >
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-4xl font-bold tracking-wider">ELVERA</h1>
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+            {isSignUp ? 'Create Account' : 'Welcome Back'}
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            {isSignUp
+              ? 'Join the premium fashion community'
+              : 'Sign in to your account'}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          {!isLogin && (
+        {/* Form */}
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            {/* Name (Sign Up only) */}
+            {isSignUp && (
+              <div>
+                <label htmlFor="name" className="sr-only">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    required={isSignUp}
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="appearance-none relative block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    placeholder="Full Name"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Email */}
             <div>
-              <label className="block text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2">Full Name</label>
-              <input 
-                type="text" 
-                required 
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-capsule px-6 py-4 text-sm font-medium text-text outline-none focus:border-zinc-500 focus:bg-white transition-all shadow-sm"
-                placeholder="John Doe"
-              />
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="appearance-none relative block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  placeholder="Email address"
+                />
+              </div>
             </div>
-          )}
-          <div>
-            <label className="block text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2">Email Address</label>
-            <input 
-              type="email" 
-              required 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-zinc-50 border border-zinc-200 rounded-capsule px-6 py-4 text-sm font-medium text-text outline-none focus:border-zinc-500 focus:bg-white transition-all shadow-sm"
-              placeholder="you@example.com"
-            />
+
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                  required
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  className="appearance-none relative block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  placeholder="Password"
+                />
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2">Password</label>
-            <input 
-              type="password" 
-              required 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-zinc-50 border border-zinc-200 rounded-capsule px-6 py-4 text-sm font-medium text-text outline-none focus:border-zinc-500 focus:bg-white transition-all shadow-sm"
-              placeholder="••••••••"
-            />
-          </div>
-          <button 
-            type="submit" 
-            className="w-full mt-4 flex items-center justify-center gap-3 bg-text text-white px-8 py-5 rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-800 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1 group"
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-black hover:bg-black/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            {isLogin ? 'LOG IN' : 'CREATE ACCOUNT'} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <LogIn className="w-5 h-5 mr-2" />
+            {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
+          </button>
+
+          {/* Google Sign In */}
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            Continue with Google
           </button>
         </form>
-      </div>
-    </motion.main>
+
+        {/* Toggle Sign In / Sign Up */}
+        <div className="text-center">
+          <button
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setFormData({ name: '', email: '', password: '' });
+            }}
+            className="text-sm text-gray-600 hover:text-black transition-colors"
+          >
+            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 }
