@@ -32,22 +32,24 @@ export default function Login() {
 
     try {
       if (isLogin) {
-        // LOGIN - Firebase Auth
+        // LOGIN
         const result = await signIn(email, password);
         
         if (result.success) {
           toast.success('Welcome back to ELVERA');
-          navigate('/dashboard');
+          // ✅ Changed to home page
+          navigate('/', { replace: true });
         } else {
           toast.error(result.error || 'Invalid credentials');
         }
       } else {
-        // SIGN UP - Firebase Auth
+        // SIGN UP
         const result = await signUp(email, password, name);
         
         if (result.success) {
-          toast.success('Account created successfully');
-          navigate('/dashboard');
+          toast.success('Account created successfully! 🎉');
+          // ✅ Changed to home page
+          navigate('/', { replace: true });
         } else {
           toast.error(result.error || 'Failed to create account');
         }
@@ -67,8 +69,9 @@ export default function Login() {
       const result = await signInWithGoogle();
       
       if (result.success) {
-        toast.success('Signed in with Google');
-        navigate('/dashboard');
+        toast.success('Signed in with Google! 🎉');
+        // ✅ Changed to home page
+        navigate('/', { replace: true });
       } else {
         toast.error(result.error || 'Google sign-in failed');
       }
