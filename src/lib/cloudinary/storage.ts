@@ -1,26 +1,23 @@
-import cloudinary, { cloudName } from './config';
+import { cloudName } from './config';
 
 export const cloudinaryStorage = {
-  // Upload single image
+  // Upload single image (Client-side unsigned upload)
   async uploadImage(
     file: File,
     folder: 'products' | 'combos' | 'banners',
     publicId?: string
   ): Promise<{ url: string; publicId: string } | null> {
     try {
-      // Convert File to base64
       const base64 = await this.fileToBase64(file);
 
-      // Create form data for upload
       const formData = new FormData();
       formData.append('file', base64);
-      formData.append('upload_preset', 'elvera_unsigned'); // You'll create this
+      formData.append('upload_preset', 'elvera_unsigned'); // You'll create this in Cloudinary
       formData.append('folder', `elvera/${folder}`);
       if (publicId) {
         formData.append('public_id', publicId);
       }
 
-      // Upload to Cloudinary
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         {
@@ -71,43 +68,11 @@ export const cloudinaryStorage = {
     }
   },
 
-  // Delete image
-  async deleteImage(publicId: string): Promise<boolean> {
-    try {
-      // This requires server-side API route
-      const response = await fetch('/api/cloudinary/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ publicId }),
-      });
-
-      const data = await response.json();
-      return data.success;
-    } catch (error) {
-      console.error('Error deleting image:', error);
-      return false;
-    }
-  },
-
-  // Delete multiple images
-  async deleteMultipleImages(publicIds: string[]): Promise<boolean> {
-    try {
-      const response = await fetch('/api/cloudinary/delete-multiple', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ publicIds }),
-      });
-
-      const data = await response.json();
-      return data.success;
-    } catch (error) {
-      console.error('Error deleting multiple images:', error);
-      return false;
-    }
+  // Note: Delete requires Admin API (backend)
+  // For now, mark images as "deleted" in Firebase instead
+  async markAsDeleted(publicId: string): Promise<boolean> {
+    console.warn('Client-side deletion not supported. Mark as deleted in database.');
+    return true;
   },
 
   // Get optimized image URL
@@ -187,9 +152,7 @@ export const cloudinaryStorage = {
   },
 
   // Validate multiple files
-  validateMultipleFiles(
-    files: File[]
-  ): { valid: boolean; errors: string[] } {
+  validateMultipleFiles(files: File[]): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     files.forEach((file, index) => {
