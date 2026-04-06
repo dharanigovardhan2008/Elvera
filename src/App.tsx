@@ -16,12 +16,21 @@ import Combos from './pages/Combos';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
+// Admin Pages
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminProducts from './pages/admin/Products';
+import AdminCombos from './pages/admin/Combos';
+import AdminAnalytics from './pages/admin/Analytics';
+import AdminUsers from './pages/admin/Users';
+
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/shoes" element={<Shop />} />
@@ -31,6 +40,15 @@ function AnimatedRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/favorites" element={<Dashboard />} />
         <Route path="/bag" element={<Dashboard />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="combos" element={<AdminCombos />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="users" element={<AdminUsers />} />
+        </Route>
       </Routes>
     </AnimatePresence>
   );
