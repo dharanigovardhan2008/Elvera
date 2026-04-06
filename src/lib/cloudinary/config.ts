@@ -2,7 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 
 // Server-side configuration (for API routes)
 cloudinary.config({
-  cloud_name: process.env.VITE_CLOUDINARY_CLOUD_NAME,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
@@ -10,4 +10,4 @@ cloudinary.config({
 export default cloudinary;
 
 // Client-side cloud name for direct uploads
-export const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '';
+export const cloudName = process.env.CLOUDINARY_CLOUD_NAME || '';
