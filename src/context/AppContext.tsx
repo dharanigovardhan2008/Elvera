@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useAuthContext } from './AuthContext';
@@ -22,10 +21,10 @@ interface AppContextType extends AppState {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuthContext(); // Get Firebase user from AuthContext
+  const { user } = useAuthContext();
 
   const [state, setState] = useState<AppState>(() => {
-    // Load from localStorage (for guests or before Firebase loads)
+    // Load from localStorage for guests
     const saved = localStorage.getItem('elvera_state');
     if (saved) {
       try {
@@ -48,12 +47,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (user) {
       loadUserDataFromFirebase();
     } else {
-      // User logged out - keep localStorage data (guest mode)
       setState((s) => ({ ...s, loading: false }));
     }
   }, [user]);
 
-  // Save to localStorage whenever state changes (for guests)
+  // Save to localStorage
   useEffect(() => {
     localStorage.setItem('elvera_state', JSON.stringify(state));
   }, [state]);
@@ -70,7 +68,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setState({
           favorites: userData.favorites || [],
           bag: userData.cart?.map((item) => item.productId) || [],
-          clicks: state.clicks, // Keep local clicks
+          clicks: state.clicks,
           loading: false,
         });
       } else {
@@ -91,7 +89,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const toggleFavorite = async (productId: string) => {
     const isFav = state.favorites.includes(productId);
 
-    // Optimistic update (works for guests too)
+    // Optimistic update
     setState((s) => ({
       ...s,
       favorites: isFav
@@ -101,12 +99,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     toast.success(isFav ? 'Removed from favorites.' : 'Added to favorites.');
 
-    // If user is logged in, sync to Firebase
+    // Sync to Firebase if logged in
     if (user) {
       try {
         await userService.toggleFavorite(user.uid, productId);
       } catch (error) {
-        console.error('Error syncing favorite to Firebase:', error);
+        console.error('Error syncing favorite:', error);
         // Revert on error
         setState((s) => ({
           ...s,
@@ -130,7 +128,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     toast.success(inBag ? 'Removed from bag.' : 'Added to bag.');
 
-    // If user is logged in, sync to Firebase
+    // Sync to Firebase if logged in
     if (user) {
       try {
         if (inBag) {
@@ -139,7 +137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           await userService.addToCart(user.uid, productId, 1);
         }
       } catch (error) {
-        console.error('Error syncing bag to Firebase:', error);
+        console.error('Error syncing bag:', error);
         // Revert on error
         setState((s) => ({
           ...s,
@@ -161,10 +159,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     // Track in Firebase (async, no await)
-    if (user) {
-      analyticsService.trackClick(productId, productTitle, platform, user.uid);
-    } else {
-      analyticsService.trackClick(productId, productTitle, platform, null);
+    try {
+      analyticsService.trackClick(productId, productTitle, platform, user?.uid || null);
+    } catch (error) {
+      console.error('Error tracking click:', error);
     }
   };
 
