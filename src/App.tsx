@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import { AppProvider } from './context/AppContext';
+import { AuthProvider } from './context/AuthContext';
 
 // Components
 import Navbar from './components/Navbar';
@@ -37,32 +38,34 @@ function AnimatedRoutes() {
 
 function App() {
   return (
-    <AppProvider>
-      <Router>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <div className="flex-1">
-            <AnimatedRoutes />
+    <AuthProvider>
+      <AppProvider>
+        <Router>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <div className="flex-1">
+              <AnimatedRoutes />
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
-        <Toaster 
-          position="bottom-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#111111',
-              color: '#FFFFFF',
-              borderRadius: '9999px',
-              padding: '16px 24px',
-              fontWeight: 'bold',
-              letterSpacing: '0.05em',
-              fontSize: '14px',
-            },
-          }}
-        />
-      </Router>
-    </AppProvider>
+          <Toaster 
+            position="bottom-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#111111',
+                color: '#FFFFFF',
+                borderRadius: '9999px',
+                padding: '16px 24px',
+                fontWeight: 'bold',
+                letterSpacing: '0.05em',
+                fontSize: '14px',
+              },
+            }}
+          />
+        </Router>
+      </AppProvider>
+    </AuthProvider>
   );
 }
 
