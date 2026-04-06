@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Heart, ShoppingBag, User, Menu, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Heart, ShoppingBag, User, Menu, X, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
+import { useAuthContext } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { bag, favorites, user } = useAppContext();
+  const navigate = useNavigate();
+  
+  const { bag, favorites } = useAppContext();
+  const { user, signOut } = useAuthContext(); // ✅ Get user from Firebase Auth
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +27,17 @@ export default function Navbar() {
     window.scrollTo(0, 0);
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  const handleSignOut = async () => {
+    const result = await signOut();
+    if (result.success) {
+      toast.success('Successfully logged out.');
+      navigate('/');
+      setMobileMenuOpen(false);
+    } else {
+      toast.error('Failed to sign out');
+    }
+  };
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -69,12 +85,41 @@ export default function Navbar() {
             </Link>
             
             {user ? (
-              <Link to="/dashboard" className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-capsule border border-zinc-200 hover:border-text transition-colors">
-                <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
-                  <User className="w-4 h-4 text-text" strokeWidth={1.5} />
+              <div className="relative group hidden sm:block">
+                <Link to="/dashboard" className="flex items-center gap-2 px-4 py-2 rounded-capsule border border-zinc-200 hover:border-text transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
+                    <span className="text-xs font-bold text-text">
+                      {user.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium">
+                    {user.displayName?.split(' ')[0] || user.email?.split('@')[0] || 'Profile'}
+                  </span>
+                </Link>
+                
+                {/* Dropdown on hover */}
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-zinc-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="px-4 py-2 border-b border-zinc-100">
+                    <p className="text-sm font-medium text-text truncate">
+                      {user.displayName || 'User'}
+                    </p>
+                    <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+                  </div>
+                  <Link to="/dashboard" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50 hover:text-text transition-colors">
+                    Dashboard
+                  </Link>
+                  <Link to="/favorites" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50 hover:text-text transition-colors">
+                    Favorites
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
                 </div>
-                <span className="text-sm font-medium">{user.name?.split(' ')[0] || 'Profile'}</span>
-              </Link>
+              </div>
             ) : (
               <Link to="/login" className="hidden sm:block px-6 py-2.5 rounded-capsule bg-text text-white text-sm font-medium hover:bg-zinc-800 transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5">
                 LOGIN
@@ -118,10 +163,26 @@ export default function Navbar() {
               <Link to="/favorites" className="flex items-center gap-4 text-lg text-zinc-600 hover:text-text">
                 <Heart className="w-6 h-6" strokeWidth={1.5} /> Saved Items ({favorites.length})
               </Link>
+              
               {user ? (
-                <Link to="/dashboard" className="w-full py-4 bg-text text-white rounded-capsule text-center font-medium mt-4">
-                  Go to Dashboard
-                </Link>
+                <>
+                  <div className="pt-4 border-t border-zinc-100">
+                    <p className="text-sm font-medium text-text">
+                      {user.displayName || 'User'}
+                    </p>
+                    <p className="text-xs text-zinc-500">{user.email}</p>
+                  </div>
+                  <Link to="/dashboard" className="w-full py-4 bg-text text-white rounded-capsule text-center font-medium">
+                    Go to Dashboard
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full py-4 bg-zinc-100 text-text rounded-capsule text-center font-medium hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Sign Out
+                  </button>
+                </>
               ) : (
                 <Link to="/login" className="w-full py-4 bg-text text-white rounded-capsule text-center font-medium mt-4">
                   Log In or Sign Up
