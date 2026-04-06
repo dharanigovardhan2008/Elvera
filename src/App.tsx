@@ -15,6 +15,8 @@ import ProductDetail from './pages/ProductDetail';
 import Combos from './pages/Combos';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Favorites from './pages/Favorites';  // ✅ NEW
+import Bag from './pages/Bag';              // ✅ NEW
 
 // Admin Pages
 import AdminLayout from './pages/admin/AdminLayout';
@@ -38,8 +40,8 @@ function AnimatedRoutes() {
         <Route path="/combos" element={<Combos />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/favorites" element={<Dashboard />} />
-        <Route path="/bag" element={<Dashboard />} />
+        <Route path="/favorites" element={<Favorites />} />  {/* ✅ NEW */}
+        <Route path="/bag" element={<Bag />} />              {/* ✅ NEW */}
 
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout />}>
