@@ -59,7 +59,6 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-6">
-      {/* Top */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-serif font-bold text-text">Products</h1>
@@ -75,7 +74,6 @@ export default function AdminProducts() {
         </Link>
       </div>
 
-      {/* Table / cards */}
       <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-zinc-500">Loading products...</div>
