@@ -14,8 +14,21 @@ export default function AdminLayout() {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 px-6">
+        <div className="bg-white border border-zinc-200 rounded-3xl p-8 text-center max-w-md shadow-sm">
+          <h2 className="text-2xl font-bold text-text mb-3">Access Denied</h2>
+          <p className="text-zinc-500 leading-7">
+            You are logged in, but your account does not have admin access.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const links = [
