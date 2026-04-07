@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import ComboCard from '../components/ComboCard';
-import { PRODUCTS, COMBOS, CATEGORIES } from '../data/mockData';
+import { productsService } from '@/lib/firebase/products';
+import { combosService } from '@/lib/firebase/combos';
 
 const fadeUp: any = {
   hidden: { opacity: 0, y: 40 },
@@ -15,23 +17,58 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
+const categories = ['Shirts', 'Pants', 'Jeans', 'Trousers'];
+
 export default function Home() {
-  const featuredProducts = PRODUCTS.slice(0, 4);
-  const featuredCombos = COMBOS.slice(0, 2);
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [featuredCombos, setFeaturedCombos] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const products = await productsService.getAllProducts();
+        const combos = await combosService.getAllCombos();
+
+        const formattedProducts = products.slice(0, 4).map((product: any) => ({
+          id: product.id,
+          title: product.title,
+          description: product.description,
+          price: product.price,
+          platform:
+            product.platform?.charAt(0).toUpperCase() + product.platform?.slice(1),
+          imageUrl: product.images?.[0]?.url || '',
+          rating: product.rating || 4.5,
+          reviewCount: product.reviews || 0,
+          affiliateLink: product.affiliateLink,
+        }));
+
+        const formattedCombos = combos.slice(0, 2).map((combo: any) => ({
+          ...combo,
+          imageUrl: combo.images?.[0]?.url || '',
+        }));
+
+        setFeaturedProducts(formattedProducts);
+        setFeaturedCombos(formattedCombos);
+      } catch (error) {
+        console.error('Error loading home data:', error);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
-    <motion.main 
-      initial="hidden" 
-      animate="visible" 
+    <motion.main
+      initial="hidden"
+      animate="visible"
       exit="hidden"
       className="min-h-screen pt-24 pb-20 overflow-hidden"
     >
-      {/* Hero Section */}
       <section className="relative px-6 lg:px-12 max-w-7xl mx-auto mb-32 h-[80vh] min-h-[600px] flex flex-col justify-center">
         <div className="absolute inset-0 rounded-[3rem] overflow-hidden -z-10 bg-zinc-100">
-          <img 
-            src="https://images.unsplash.com/photo-1617391654484-2996fbff4a86?auto=format&fit=crop&q=80&w=2000" 
-            alt="Hero Background" 
+          <img
+            src="https://images.unsplash.com/photo-1617391654484-2996fbff4a86?auto=format&fit=crop&q=80&w=2000"
+            alt="Hero Background"
             className="w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10"></div>
@@ -47,10 +84,10 @@ export default function Home() {
           <p className="text-lg md:text-2xl text-zinc-200 font-medium tracking-wide max-w-2xl mb-12 text-balance drop-shadow-md">
             Dress like no one else. The finest curation of premium fashion from trusted platforms.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <Link to="/shop" className="group px-10 py-5 bg-white text-text rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-100 transition-all flex items-center gap-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-              SHOP COLLECTION 
+              SHOP COLLECTION
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link to="/combos" className="group px-10 py-5 bg-black/30 backdrop-blur-md text-white border border-white/20 rounded-capsule text-sm font-bold tracking-widest hover:bg-white/40 transition-all flex items-center gap-3">
@@ -60,13 +97,12 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Categories */}
       <section className="px-6 lg:px-12 max-w-7xl mx-auto mb-32">
-        <motion.div 
+        <motion.div
           variants={fadeUp}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: '-100px' }}
           className="flex items-end justify-between mb-12"
         >
           <div>
@@ -80,25 +116,27 @@ export default function Home() {
           </Link>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"
         >
-          {CATEGORIES.slice(0, 4).map((cat, idx) => (
+          {categories.map((cat, idx) => (
             <motion.div key={cat} variants={fadeUp}>
               <Link to={`/shop?category=${cat}`} className="group relative aspect-[4/5] rounded-[2rem] overflow-hidden block bg-zinc-100 shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-zinc-100">
-                <img 
-                  src={`https://images.unsplash.com/photo-${['1596755094514-f87e34085b2c', '1624378439575-d8705ad7ae80', '1542272454315-4c01d7abdf4a', '1556821840-3a63f95609a7'][idx]}?auto=format&fit=crop&q=80&w=800`} 
-                  alt={cat} 
+                <img
+                  src={`https://images.unsplash.com/photo-${['1596755094514-f87e34085b2c', '1624378439575-d8705ad7ae80', '1542272454315-4c01d7abdf4a', '1556821840-3a63f95609a7'][idx]}?auto=format&fit=crop&q=80&w=800`}
+                  alt={cat}
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent transition-opacity group-hover:opacity-90"></div>
                 <div className="absolute bottom-6 left-6 right-6">
                   <h3 className="text-xl font-serif font-bold text-white mb-2">{cat}</h3>
-                  <span className="text-xs font-bold tracking-widest text-white/70 uppercase group-hover:text-white transition-colors">Explore <ArrowRight className="w-3 h-3 inline-block ml-1" /></span>
+                  <span className="text-xs font-bold tracking-widest text-white/70 uppercase group-hover:text-white transition-colors">
+                    Explore <ArrowRight className="w-3 h-3 inline-block ml-1" />
+                  </span>
                 </div>
               </Link>
             </motion.div>
@@ -106,9 +144,8 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Trending Products */}
       <section className="px-6 lg:px-12 max-w-[1400px] mx-auto mb-32">
-        <motion.div 
+        <motion.div
           variants={fadeUp}
           initial="hidden"
           whileInView="visible"
@@ -126,7 +163,7 @@ export default function Home() {
           </Link>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
@@ -141,11 +178,10 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Complete the Look */}
       <section className="px-6 lg:px-12 max-w-[1400px] mx-auto mb-20 bg-zinc-900 rounded-[3rem] py-20 lg:py-32 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
         <div className="relative z-10">
-          <motion.div 
+          <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
@@ -161,7 +197,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
@@ -174,23 +210,12 @@ export default function Home() {
               </motion.div>
             ))}
           </motion.div>
-          
+
           <div className="mt-16 text-center">
             <Link to="/combos" className="inline-flex items-center gap-3 px-10 py-5 bg-white text-text rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-100 transition-all shadow-xl group">
               EXPLORE ALL OUTFITS <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Available On */}
-      <section className="px-6 py-12 border-t border-zinc-100 text-center max-w-5xl mx-auto">
-        <p className="text-xs font-bold text-zinc-400 uppercase tracking-[0.3em] mb-12">Proudly Curating From</p>
-        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-          <span className="text-2xl font-serif font-bold tracking-widest text-text">AMAZON</span>
-          <span className="text-2xl font-serif font-bold tracking-widest text-text">MYNTRA</span>
-          <span className="text-2xl font-serif font-bold tracking-widest text-text">FLIPKART</span>
-          <span className="text-2xl font-serif font-bold tracking-widest text-text">AJIO</span>
         </div>
       </section>
     </motion.main>
