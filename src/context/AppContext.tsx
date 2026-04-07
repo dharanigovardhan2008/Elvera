@@ -30,12 +30,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loading: false,
   });
 
-  // Load user data from Firebase when user logs in
   useEffect(() => {
     if (user) {
       loadUserDataFromFirebase();
     } else {
-      // Clear state when user logs out
       setState({
         favorites: [],
         bag: [],
@@ -52,11 +50,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setState((s) => ({ ...s, loading: true }));
 
       const userData = await userService.getUserData(user.uid);
+      console.log('APP CONTEXT USER DATA:', userData);
 
       if (userData) {
         setState({
           favorites: userData.favorites || [],
-          bag: userData.cart?.map((item) => item.productId) || [],
+          bag: userData.cart?.map((item: any) => item.productId) || [],
           clicks: [],
           loading: false,
         });
@@ -75,21 +74,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const toggleFavorite = async (productId: string, requireLogin: boolean = true): Promise<boolean> => {
-    // ✅ Check if login is required (ProductCard sets this to true)
+  const toggleFavorite = async (
+    productId: string,
+    requireLogin: boolean = true
+  ): Promise<boolean> => {
     if (requireLogin && !user) {
       toast.error('Please login to add favorites');
-      return false; // Return false to signal login required
+      return false;
     }
 
-    // If user is not logged in but requireLogin is false, do nothing
     if (!user) {
       return false;
     }
 
     const isFav = state.favorites.includes(productId);
 
-    // Optimistic update
     setState((s) => ({
       ...s,
       favorites: isFav
@@ -99,39 +98,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     toast.success(isFav ? 'Removed from favorites.' : 'Added to favorites.');
 
-    // Sync to Firebase
     try {
       await userService.toggleFavorite(user.uid, productId);
       return true;
     } catch (error) {
       console.error('Error syncing favorite:', error);
-      // Revert on error
+
       setState((s) => ({
         ...s,
         favorites: isFav
           ? [...s.favorites, productId]
           : s.favorites.filter((id) => id !== productId),
       }));
+
       toast.error('Failed to sync. Please try again.');
       return false;
     }
   };
 
-  const toggleBag = async (productId: string, requireLogin: boolean = true): Promise<boolean> => {
-    // ✅ Check if login is required (ProductCard sets this to true)
+  const toggleBag = async (
+    productId: string,
+    requireLogin: boolean = true
+  ): Promise<boolean> => {
     if (requireLogin && !user) {
       toast.error('Please login to add items to bag');
-      return false; // Return false to signal login required
+      return false;
     }
 
-    // If user is not logged in but requireLogin is false, do nothing
     if (!user) {
       return false;
     }
 
     const inBag = state.bag.includes(productId);
 
-    // Optimistic update
     setState((s) => ({
       ...s,
       bag: inBag ? s.bag.filter((id) => id !== productId) : [...s.bag, productId],
@@ -139,7 +138,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     toast.success(inBag ? 'Removed from bag.' : 'Added to bag.');
 
-    // Sync to Firebase
     try {
       if (inBag) {
         await userService.removeFromCart(user.uid, productId);
@@ -149,22 +147,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     } catch (error) {
       console.error('Error syncing bag:', error);
-      // Revert on error
+
       setState((s) => ({
         ...s,
         bag: inBag ? [...s.bag, productId] : s.bag.filter((id) => id !== productId),
       }));
+
       toast.error('Failed to sync. Please try again.');
       return false;
     }
   };
 
-  const trackClick = (productId: string, productTitle: string, platform: string) => {
+  const trackClick = (
+    productId: string,
+    productTitle: string,
+    platform: string
+  ) => {
     setState((s) => ({
       ...s,
       clicks: [
         ...s.clicks,
-        { productId, platform, timestamp: new Date().toISOString() },
+        { productId, productTitle, platform, timestamp: new Date().toISOString() },
       ],
     }));
 
