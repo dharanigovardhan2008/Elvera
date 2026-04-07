@@ -30,7 +30,6 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-zinc-50 pt-24">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
-          {/* Sidebar */}
           <aside className="bg-white border border-zinc-200 rounded-3xl p-4 h-fit sticky top-28">
             <div className="mb-6 px-2">
               <h2 className="text-xl font-serif font-bold text-text">Admin Panel</h2>
@@ -60,7 +59,6 @@ export default function AdminLayout() {
             </nav>
           </aside>
 
-          {/* Content */}
           <section className="min-w-0">
             <Outlet />
           </section>
