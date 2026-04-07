@@ -11,4 +11,4 @@ cloudinary.config({
 export default cloudinary;
 
 // Client-side cloud name for direct uploads
-export const cloudName = process.env.VITE_CLOUDINARY_CLOUD_NAME || '';
+export const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "";
