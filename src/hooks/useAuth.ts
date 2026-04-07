@@ -9,16 +9,18 @@ export const useAuth = () => {
 
   useEffect(() => {
     const unsubscribe = authService.onAuthStateChange(async (user) => {
+      console.log('AUTH STATE USER:', user);
       setUser(user);
-      
+
       if (user) {
-        // Check if user is admin
+        console.log('CHECKING ADMIN FOR UID:', user.uid);
         const adminStatus = await authService.isAdmin(user.uid);
+        console.log('ADMIN STATUS:', adminStatus);
         setIsAdmin(adminStatus);
       } else {
         setIsAdmin(false);
       }
-      
+
       setLoading(false);
     });
 
