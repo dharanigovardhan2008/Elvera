@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
@@ -9,7 +8,7 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
-// Pages
+// Public Pages
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
@@ -23,7 +22,7 @@ import Bag from './pages/Bag';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
-import AddProduct from './pages/admin/AddProduct';  // ✅ NEW
+import AddProduct from './pages/admin/AddProduct';
 import AdminCombos from './pages/admin/Combos';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminUsers from './pages/admin/Users';
@@ -49,7 +48,7 @@ function AnimatedRoutes() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="products" element={<AdminProducts />} />
-          <Route path="products/add" element={<AddProduct />} />  {/* ✅ NEW */}
+          <Route path="products/add" element={<AddProduct />} />
           <Route path="combos" element={<AdminCombos />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="users" element={<AdminUsers />} />
@@ -64,14 +63,15 @@ function App() {
     <AuthProvider>
       <AppProvider>
         <Router>
-          <div className="flex flex-col min-h-screen">
+          <div className="flex flex-col min-h-screen bg-white">
             <Navbar />
-            <div className="flex-1">
+            <main className="flex-1">
               <AnimatedRoutes />
-            </div>
+            </main>
             <Footer />
           </div>
-          <Toaster 
+
+          <Toaster
             position="bottom-right"
             toastOptions={{
               duration: 3000,
