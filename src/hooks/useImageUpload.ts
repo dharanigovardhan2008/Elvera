@@ -16,7 +16,6 @@ export const useImageUpload = () => {
     file: File,
     folder: 'products' | 'combos' | 'banners'
   ) => {
-    // Validate file
     const validation = cloudinaryStorage.validateImageFile(file);
     if (!validation.valid) {
       setError(validation.error || 'Invalid file');
@@ -29,12 +28,12 @@ export const useImageUpload = () => {
 
       const result = await cloudinaryStorage.uploadImage(file, folder);
 
-      if (result) {
-        return result;
-      } else {
+      if (!result) {
         setError('Upload failed');
         return null;
       }
+
+      return result;
     } catch (err) {
       console.error('Upload error:', err);
       setError('Upload failed');
@@ -48,7 +47,6 @@ export const useImageUpload = () => {
     files: File[],
     folder: 'products' | 'combos' | 'banners'
   ) => {
-    // Validate files
     const validation = cloudinaryStorage.validateMultipleFiles(files);
     if (!validation.valid) {
       setError(validation.errors.join(', '));
@@ -66,10 +64,10 @@ export const useImageUpload = () => {
         (index, total) => {
           setUploadProgress((prev) => {
             const updated = [...prev];
-            updated[index] = {
-              fileIndex: index,
+            updated[index - 1] = {
+              fileIndex: index - 1,
               progress: 100,
-              fileName: files[index].name,
+              fileName: files[index - 1].name,
             };
             return updated;
           });
@@ -87,33 +85,11 @@ export const useImageUpload = () => {
     }
   };
 
-  const deleteImage = async (publicId: string) => {
-    try {
-      const success = await cloudinaryStorage.deleteImage(publicId);
-      return success;
-    } catch (err) {
-      console.error('Delete error:', err);
-      return false;
-    }
-  };
-
-  const deleteMultiple = async (publicIds: string[]) => {
-    try {
-      const success = await cloudinaryStorage.deleteMultipleImages(publicIds);
-      return success;
-    } catch (err) {
-      console.error('Delete error:', err);
-      return false;
-    }
-  };
-
   return {
     uploading,
     uploadProgress,
     error,
     uploadSingle,
     uploadMultiple,
-    deleteImage,
-    deleteMultiple,
   };
 };
