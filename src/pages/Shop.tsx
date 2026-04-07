@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, Sparkles } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { PRODUCTS, CATEGORIES, PLATFORMS } from '../data/mockData';
+import { productsService } from '@/lib/firebase/products';
 
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13,6 +13,36 @@ export default function Shop() {
   const [priceFilter, setPriceFilter] = useState('All');
   const [platformFilter, setPlatformFilter] = useState('All');
   const [sortBy, setSortBy] = useState('Recommended');
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await productsService.getAllProducts();
+
+        const formatted = data.map((product: any) => ({
+          id: product.id,
+          title: product.title,
+          description: product.description,
+          category:
+            product.category?.charAt(0).toUpperCase() + product.category?.slice(1),
+          price: product.price,
+          platform:
+            product.platform?.charAt(0).toUpperCase() + product.platform?.slice(1),
+          affiliateLink: product.affiliateLink,
+          imageUrl: product.images?.[0]?.url || '',
+          rating: product.rating || 4.5,
+          reviewCount: product.reviews || 0,
+        }));
+
+        setProducts(formatted);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   useEffect(() => {
     if (initialCategory !== activeCategory) {
@@ -20,21 +50,24 @@ export default function Shop() {
     }
   }, [initialCategory]);
 
+  const categories = ['Shirts', 'Pants', 'Jeans', 'Trousers', 'Hoodies', 'Oversized-tshirts'];
+  const platforms = ['Amazon', 'Flipkart', 'Myntra', 'Ajio'];
+
   const filteredProducts = useMemo(() => {
-    let result = [...PRODUCTS];
+    let result = [...products];
 
     if (activeCategory !== 'All') {
-      result = result.filter(p => p.category === activeCategory);
+      result = result.filter((p) => p.category.toLowerCase() === activeCategory.toLowerCase());
     }
 
     if (platformFilter !== 'All') {
-      result = result.filter(p => p.platform === platformFilter);
+      result = result.filter((p) => p.platform === platformFilter);
     }
 
     if (priceFilter !== 'All') {
-      if (priceFilter === 'Under ₹1000') result = result.filter(p => p.price < 1000);
-      else if (priceFilter === 'Under ₹2000') result = result.filter(p => p.price < 2000);
-      else if (priceFilter === 'Above ₹2000') result = result.filter(p => p.price >= 2000);
+      if (priceFilter === 'Under ₹1000') result = result.filter((p) => p.price < 1000);
+      else if (priceFilter === 'Under ₹2000') result = result.filter((p) => p.price < 2000);
+      else if (priceFilter === 'Above ₹2000') result = result.filter((p) => p.price >= 2000);
     }
 
     if (sortBy === 'Price: Low to High') result.sort((a, b) => a.price - b.price);
@@ -42,12 +75,12 @@ export default function Shop() {
     else if (sortBy === 'Top Rated') result.sort((a, b) => b.rating - a.rating);
 
     return result;
-  }, [activeCategory, priceFilter, platformFilter, sortBy]);
+  }, [activeCategory, priceFilter, platformFilter, sortBy, products]);
 
   return (
-    <motion.main 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
+    <motion.main
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="min-h-screen pt-32 pb-20 px-6 lg:px-12 max-w-[1400px] mx-auto"
     >
@@ -58,8 +91,8 @@ export default function Shop() {
           </h1>
           <p className="text-zinc-500 font-medium">Showing {filteredProducts.length} premium pieces</p>
         </div>
-        
-        <button 
+
+        <button
           onClick={() => setShowFilters(!showFilters)}
           className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-100 rounded-capsule font-bold text-sm tracking-widest text-text hover:bg-zinc-200 transition-colors w-full md:w-auto"
         >
@@ -69,7 +102,7 @@ export default function Shop() {
 
       <AnimatePresence>
         {showFilters && (
-          <motion.div 
+          <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -79,11 +112,16 @@ export default function Shop() {
               <div className="space-y-4">
                 <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">Category</h3>
                 <div className="flex flex-col gap-2">
-                  {['All', ...CATEGORIES].map(cat => (
-                    <button 
+                  {['All', ...categories].map((cat) => (
+                    <button
                       key={cat}
-                      onClick={() => { setActiveCategory(cat); setSearchParams({ category: cat }); }}
-                      className={`text-left text-sm font-medium transition-colors ${activeCategory === cat ? 'text-text font-bold' : 'text-zinc-500 hover:text-text'}`}
+                      onClick={() => {
+                        setActiveCategory(cat);
+                        setSearchParams({ category: cat });
+                      }}
+                      className={`text-left text-sm font-medium transition-colors ${
+                        activeCategory === cat ? 'text-text font-bold' : 'text-zinc-500 hover:text-text'
+                      }`}
                     >
                       {cat}
                     </button>
@@ -94,11 +132,13 @@ export default function Shop() {
               <div className="space-y-4">
                 <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">Price Range</h3>
                 <div className="flex flex-col gap-2">
-                  {['All', 'Under ₹1000', 'Under ₹2000', 'Above ₹2000'].map(price => (
-                    <button 
+                  {['All', 'Under ₹1000', 'Under ₹2000', 'Above ₹2000'].map((price) => (
+                    <button
                       key={price}
                       onClick={() => setPriceFilter(price)}
-                      className={`text-left text-sm font-medium transition-colors ${priceFilter === price ? 'text-text font-bold' : 'text-zinc-500 hover:text-text'}`}
+                      className={`text-left text-sm font-medium transition-colors ${
+                        priceFilter === price ? 'text-text font-bold' : 'text-zinc-500 hover:text-text'
+                      }`}
                     >
                       {price}
                     </button>
@@ -109,11 +149,15 @@ export default function Shop() {
               <div className="space-y-4">
                 <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">Platform</h3>
                 <div className="flex flex-wrap gap-2">
-                  {['All', ...Object.values(PLATFORMS)].map(platform => (
-                    <button 
+                  {['All', ...platforms].map((platform) => (
+                    <button
                       key={platform}
                       onClick={() => setPlatformFilter(platform)}
-                      className={`px-4 py-2 rounded-capsule text-xs font-bold transition-all ${platformFilter === platform ? 'bg-text text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+                      className={`px-4 py-2 rounded-capsule text-xs font-bold transition-all ${
+                        platformFilter === platform
+                          ? 'bg-text text-white'
+                          : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                      }`}
                     >
                       {platform}
                     </button>
@@ -124,11 +168,13 @@ export default function Shop() {
               <div className="space-y-4">
                 <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">Sort By</h3>
                 <div className="flex flex-col gap-2">
-                  {['Recommended', 'Price: Low to High', 'Price: High to Low', 'Top Rated'].map(sort => (
-                    <button 
+                  {['Recommended', 'Price: Low to High', 'Price: High to Low', 'Top Rated'].map((sort) => (
+                    <button
                       key={sort}
                       onClick={() => setSortBy(sort)}
-                      className={`text-left text-sm font-medium transition-colors ${sortBy === sort ? 'text-text font-bold' : 'text-zinc-500 hover:text-text'}`}
+                      className={`text-left text-sm font-medium transition-colors ${
+                        sortBy === sort ? 'text-text font-bold' : 'text-zinc-500 hover:text-text'
+                      }`}
                     >
                       {sort}
                     </button>
@@ -141,13 +187,13 @@ export default function Shop() {
       </AnimatePresence>
 
       {filteredProducts.length > 0 ? (
-        <motion.div 
+        <motion.div
           layout
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
         >
           <AnimatePresence>
-            {filteredProducts.map(product => (
-              <motion.div 
+            {filteredProducts.map((product) => (
+              <motion.div
                 key={product.id}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -164,8 +210,10 @@ export default function Shop() {
         <div className="py-32 text-center flex flex-col items-center">
           <Sparkles className="w-12 h-12 text-zinc-300 mb-6" />
           <h2 className="text-2xl font-serif font-bold text-text mb-2">No items found</h2>
-          <p className="text-zinc-500 mb-8 max-w-md mx-auto">We couldn't find any products matching your current filters. Try adjusting your selections.</p>
-          <button 
+          <p className="text-zinc-500 mb-8 max-w-md mx-auto">
+            We couldn't find any products matching your current filters. Try adjusting your selections.
+          </p>
+          <button
             onClick={() => {
               setActiveCategory('All');
               setPriceFilter('All');
