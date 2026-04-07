@@ -21,7 +21,7 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
-const categories = ['Shirts', 'Pants', 'Jeans', 'Trousers'];
+const categories = ['Shirts', 'Pants', 'Shoes', 'Trousers'];
 
 export default function Home() {
   // ---------------------------------------------------------
