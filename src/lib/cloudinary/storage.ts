@@ -74,6 +74,13 @@ export const cloudinaryStorage = {
 
       const data = await response.json();
 
+      console.log("CLOUDINARY RESPONSE:", data);
+
+      if (!response.ok) {
+        console.error("Cloudinary upload HTTP error:", response.status, data);
+        return null;
+      }
+
       if (!data.secure_url || !data.public_id) {
         console.error("Cloudinary upload failed:", data);
         return null;
