@@ -1,35 +1,54 @@
 import { useEffect, useState } from 'react';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 interface UserItem {
   id: string;
   email?: string;
   displayName?: string;
+  uid?: string;
+  createdAt?: any;
+  lastLogin?: any;
 }
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [adminIds, setAdminIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const loadUsers = async () => {
       try {
+        setLoading(true);
+        setError('');
+
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const adminsSnapshot = await getDocs(collection(db, 'admins'));
 
-        const admins = adminsSnapshot.docs.map((doc) => doc.id);
-        setAdminIds(admins);
+        const adminDocIds = adminsSnapshot.docs.map((doc) => doc.id);
+        setAdminIds(adminDocIds);
 
-        const list: UserItem[] = usersSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<UserItem, 'id'>),
-        }));
+        const usersList: UserItem[] = usersSnapshot.docs.map((doc) => {
+          const data = doc.data() as any;
 
-        setUsers(list);
-      } catch (error) {
-        console.error(error);
+          return {
+            id: doc.id,
+            uid: data.uid || doc.id,
+            email: data.email || '',
+            displayName: data.displayName || '',
+            createdAt: data.createdAt || null,
+            lastLogin: data.lastLogin || null,
+          };
+        });
+
+        console.log('USERS LIST:', usersList);
+        console.log('ADMIN IDS:', adminDocIds);
+
+        setUsers(usersList);
+      } catch (err: any) {
+        console.error('Error loading users:', err);
+        setError(err?.message || 'Failed to load users');
       } finally {
         setLoading(false);
       }
@@ -37,6 +56,16 @@ export default function AdminUsers() {
 
     loadUsers();
   }, []);
+
+  const formatDate = (timestamp: any) => {
+    try {
+      if (!timestamp) return 'N/A';
+      if (timestamp.toDate) return timestamp.toDate().toLocaleString();
+      return 'N/A';
+    } catch {
+      return 'N/A';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -48,6 +77,10 @@ export default function AdminUsers() {
       <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-zinc-500">Loading users...</div>
+        ) : error ? (
+          <div className="p-10 text-center text-red-500">
+            Error: {error}
+          </div>
         ) : users.length === 0 ? (
           <div className="p-10 text-center text-zinc-500">No users found</div>
         ) : (
@@ -58,27 +91,30 @@ export default function AdminUsers() {
               return (
                 <div
                   key={user.id}
-                  className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+                  className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
                 >
-                  <div>
-                    <p className="font-medium text-text">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-text">
                       {user.displayName || 'Unnamed User'}
                     </p>
-                    <p className="text-sm text-zinc-500">{user.email || 'No email'}</p>
+                    <p className="text-sm text-zinc-500 break-all">
+                      {user.email || 'No email'}
+                    </p>
+                    <div className="mt-2 text-xs text-zinc-400 space-y-1">
+                      <p>UID: {user.uid}</p>
+                      <p>Created: {formatDate(user.createdAt)}</p>
+                      <p>Last Login: {formatDate(user.lastLogin)}</p>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3 flex-wrap">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        isAdmin
-                          ? 'bg-black text-white'
-                          : 'bg-zinc-100 text-zinc-700'
+                        isAdmin ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-700'
                       }`}
                     >
                       {isAdmin ? 'Admin' : 'User'}
                     </span>
-
-                    <span className="text-xs text-zinc-400 break-all">{user.id}</span>
                   </div>
                 </div>
               );
