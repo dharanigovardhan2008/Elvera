@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Heart, ShoppingBag, Star, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
@@ -6,16 +5,23 @@ import { useAuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { cloudinaryStorage } from '@/lib/cloudinary/storage';
 
+interface ProductImage {
+  url: string;
+  publicId?: string;
+}
+
 interface Product {
   id: string;
   title: string;
   description: string;
   price: number;
   platform: string;
-  imageUrl: string;
+  imageUrl?: string;
   publicId?: string;
+  images?: ProductImage[];
   rating: number;
-  reviewCount: number;
+  reviewCount?: number;
+  reviews?: number;
   affiliateLink: string;
 }
 
@@ -23,13 +29,6 @@ export default function ProductCard({ product }: { product: Product }) {
   const { toggleFavorite, toggleBag, favorites, bag, trackClick } = useAppContext();
   const { user } = useAuthContext();
   const navigate = useNavigate();
-  
-  // State to track if the URL fails to load
-  const [imageFailed, setImageFailed] = useState(false);
-
-  // 🐛 DEVELOPER TOOL: Open your browser console (Right Click -> Inspect -> Console) 
-  // to see exactly what image data is being passed to this card!
-  console.log(`Data received for product "${product.title}":`, product);
 
   const isFav = favorites.includes(product.id);
   const inBag = bag.includes(product.id);
@@ -74,44 +73,35 @@ export default function ProductCard({ product }: { product: Product }) {
     ajio: 'bg-red-100 text-red-700',
   };
 
-  // Your exact original logic
+  const fallbackImage =
+    product.imageUrl ||
+    product.images?.[0]?.url ||
+    'https://via.placeholder.com/800x1000?text=No+Image';
+
+  const imagePublicId = product.publicId || product.images?.[0]?.publicId || '';
+
   const finalImageUrl =
-    product.publicId && product.publicId.trim() !== ''
-      ? cloudinaryStorage.getOptimizedUrl(product.publicId, {
+    imagePublicId && imagePublicId.trim() !== ''
+      ? cloudinaryStorage.getOptimizedUrl(imagePublicId, {
           width: 800,
           height: 1000,
           crop: 'fill',
           quality: 'auto',
         })
-      : product.imageUrl;
+      : fallbackImage;
 
   return (
     <motion.div
       whileHover={{ y: -8 }}
       className="group relative flex flex-col bg-white rounded-[2rem] border border-zinc-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)]"
     >
-      <Link to={`/product/${product.id}`} className="block relative aspect-[4/5] overflow-hidden bg-zinc-50">
-        
-        {/* If we have a URL and it hasn't failed, try to show the image */}
-        {finalImageUrl && !imageFailed ? (
-          <img
-            src={finalImageUrl}
-            alt={product.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
-            onError={() => setImageFailed(true)} // If image is broken, trigger the error state
-          />
-        ) : (
-          /* If there is NO URL, or the URL is broken, show this message */
-          <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-100 text-zinc-400 p-4 text-center">
-            <span className="text-xs font-bold uppercase tracking-widest text-red-400 mb-1">
-              Image Error
-            </span>
-            <span className="text-[10px] uppercase text-zinc-400">
-              Check Browser Console
-            </span>
-          </div>
-        )}
+      <Link to={`/product/${product.id}`} className="block relative aspect-[4/5] overflow-hidden">
+        <img
+          src={finalImageUrl}
+          alt={product.title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          loading="lazy"
+        />
 
         <div className="absolute top-4 right-4 z-10">
           <span
@@ -129,7 +119,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${
               isFav
                 ? 'bg-black text-white'
-                : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black shadow-sm'
+                : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black'
             }`}
           >
             <Heart className="w-4 h-4" fill={isFav ? 'currentColor' : 'none'} />
@@ -140,7 +130,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${
               inBag
                 ? 'bg-black text-white'
-                : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black shadow-sm'
+                : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black'
             }`}
           >
             <ShoppingBag className="w-4 h-4" fill={inBag ? 'currentColor' : 'none'} />
@@ -152,7 +142,9 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="flex items-center gap-1.5 mb-2">
           <Star className="w-4 h-4 fill-zinc-900 text-zinc-900" />
           <span className="text-sm font-semibold text-zinc-900">{product.rating}</span>
-          <span className="text-xs text-zinc-400 font-medium">({product.reviewCount})</span>
+          <span className="text-xs text-zinc-400 font-medium">
+            ({product.reviewCount || product.reviews || 0})
+          </span>
         </div>
 
         <Link to={`/product/${product.id}`} className="block mb-1">
@@ -172,7 +164,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
           <button
             onClick={handleBuy}
-            className="flex items-center gap-2 bg-text text-white px-5 py-2.5 rounded-full text-sm font-bold tracking-wide hover:bg-zinc-800 transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-2 bg-text text-white px-5 py-2.5 rounded-capsule text-sm font-bold tracking-wide hover:bg-zinc-800 transition-all active:scale-95 shadow-sm"
           >
             BUY <ExternalLink className="w-3.5 h-3.5" />
           </button>
