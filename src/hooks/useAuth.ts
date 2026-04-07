@@ -8,15 +8,13 @@ export const useAuth = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = authService.onAuthStateChange(async (user) => {
-      console.log('AUTH STATE USER:', user);
-      setUser(user);
+    const unsubscribe = authService.onAuthStateChange(async (firebaseUser) => {
+      setLoading(true);
+      setUser(firebaseUser);
 
-      if (user) {
+      if (firebaseUser) {
         try {
-          console.log('CHECKING ADMIN FOR UID:', user.uid);
-          const adminStatus = await authService.isAdmin(user.uid);
-          console.log('ADMIN STATUS:', adminStatus);
+          const adminStatus = await authService.isAdmin(firebaseUser.uid);
           setIsAdmin(adminStatus);
         } catch (error) {
           console.error('ADMIN CHECK FAILED:', error);
