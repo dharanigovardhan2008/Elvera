@@ -23,7 +23,9 @@ import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
 import AddProduct from './pages/admin/AddProduct';
+import EditProduct from './pages/admin/EditProduct';
 import AdminCombos from './pages/admin/Combos';
+import AddCombo from './pages/admin/AddCombo';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminUsers from './pages/admin/Users';
 
@@ -49,7 +51,9 @@ function AnimatedRoutes() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="products/add" element={<AddProduct />} />
+          <Route path="products/edit/:id" element={<EditProduct />} />
           <Route path="combos" element={<AdminCombos />} />
+          <Route path="combos/add" element={<AddCombo />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="users" element={<AdminUsers />} />
         </Route>
