@@ -5,7 +5,6 @@ import {
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
-  User,
   updateProfile,
   sendPasswordResetEmail,
   updateEmail,
@@ -17,20 +16,17 @@ import { auth, db } from './config';
 const googleProvider = new GoogleAuthProvider();
 
 export const authService = {
-  // Sign Up with Email
   async signUp(email: string, password: string, displayName: string) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Update profile
       await updateProfile(user, { displayName });
 
-      // Create user document in Firestore
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         email: user.email,
-        displayName: displayName,
+        displayName,
         photoURL: null,
         favorites: [],
         cart: [],
@@ -45,12 +41,10 @@ export const authService = {
     }
   },
 
-  // Sign In with Email
   async signIn(email: string, password: string) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-      // Update last login
       await setDoc(
         doc(db, 'users', userCredential.user.uid),
         {
@@ -66,17 +60,14 @@ export const authService = {
     }
   },
 
-  // Sign In with Google
   async signInWithGoogle() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      // Check if user document exists
       const userDoc = await getDoc(doc(db, 'users', user.uid));
 
       if (!userDoc.exists()) {
-        // Create new user document
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           email: user.email,
@@ -88,7 +79,6 @@ export const authService = {
           lastLogin: serverTimestamp(),
         });
       } else {
-        // Update last login
         await setDoc(
           doc(db, 'users', user.uid),
           {
@@ -105,7 +95,6 @@ export const authService = {
     }
   },
 
-  // Sign Out
   async signOut() {
     try {
       await signOut(auth);
@@ -116,17 +105,10 @@ export const authService = {
     }
   },
 
-  // Get Current User
-  getCurrentUser(): User | null {
-    return auth.currentUser;
-  },
-
-  // Auth State Observer
-  onAuthStateChange(callback: (user: User | null) => void) {
+  onAuthStateChange(callback: any) {
     return onAuthStateChanged(auth, callback);
   },
 
-  // Password Reset
   async resetPassword(email: string) {
     try {
       await sendPasswordResetEmail(auth, email);
@@ -137,18 +119,13 @@ export const authService = {
     }
   },
 
-  // Update User Email
   async updateUserEmail(newEmail: string) {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
       await updateEmail(user, newEmail);
-      await setDoc(
-        doc(db, 'users', user.uid),
-        { email: newEmail },
-        { merge: true }
-      );
+      await setDoc(doc(db, 'users', user.uid), { email: newEmail }, { merge: true });
 
       return { success: true };
     } catch (error: any) {
@@ -157,7 +134,6 @@ export const authService = {
     }
   },
 
-  // Update User Password
   async updateUserPassword(newPassword: string) {
     try {
       const user = auth.currentUser;
@@ -171,7 +147,6 @@ export const authService = {
     }
   },
 
-  // Check if user is admin
   async isAdmin(userId: string): Promise<boolean> {
     try {
       const adminDoc = await getDoc(doc(db, 'admins', userId));
