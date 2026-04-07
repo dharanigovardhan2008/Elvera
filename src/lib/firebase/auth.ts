@@ -150,6 +150,7 @@ export const authService = {
   async isAdmin(userId: string): Promise<boolean> {
     try {
       const adminDoc = await getDoc(doc(db, 'admins', userId));
+      console.log('ADMIN DOC CHECK:', userId, adminDoc.exists());
       return adminDoc.exists();
     } catch (error) {
       console.error('Check admin error:', error);
