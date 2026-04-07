@@ -15,13 +15,14 @@ import ProductDetail from './pages/ProductDetail';
 import Combos from './pages/Combos';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Favorites from './pages/Favorites';  // ✅ NEW
-import Bag from './pages/Bag';              // ✅ NEW
+import Favorites from './pages/Favorites';
+import Bag from './pages/Bag';
 
 // Admin Pages
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
+import AddProduct from './pages/admin/AddProduct';  // ✅ NEW
 import AdminCombos from './pages/admin/Combos';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminUsers from './pages/admin/Users';
@@ -40,13 +41,14 @@ function AnimatedRoutes() {
         <Route path="/combos" element={<Combos />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/favorites" element={<Favorites />} />  {/* ✅ NEW */}
-        <Route path="/bag" element={<Bag />} />              {/* ✅ NEW */}
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/bag" element={<Bag />} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="products" element={<AdminProducts />} />
+          <Route path="products/add" element={<AddProduct />} />  {/* ✅ NEW */}
           <Route path="combos" element={<AdminCombos />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="users" element={<AdminUsers />} />
