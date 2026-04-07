@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { ArrowRight, User } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { authService } from '@/lib/firebase/auth';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,13 +12,28 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { signIn, signUp, signInWithGoogle } = useAuthContext();
   const navigate = useNavigate();
 
+  const redirectUser = async (firebaseUser: any) => {
+    try {
+      const admin = await authService.isAdmin(firebaseUser.uid);
+
+      if (admin) {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    } catch (error) {
+      console.error('Redirect check failed:', error);
+      navigate('/', { replace: true });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error('Please fill all fields');
       return;
@@ -32,24 +48,20 @@ export default function Login() {
 
     try {
       if (isLogin) {
-        // LOGIN
         const result = await signIn(email, password);
-        
-        if (result.success) {
+
+        if (result.success && result.user) {
           toast.success('Welcome back to ELVERA');
-          // ✅ Changed to home page
-          navigate('/', { replace: true });
+          await redirectUser(result.user);
         } else {
           toast.error(result.error || 'Invalid credentials');
         }
       } else {
-        // SIGN UP
         const result = await signUp(email, password, name);
-        
-        if (result.success) {
+
+        if (result.success && result.user) {
           toast.success('Account created successfully! 🎉');
-          // ✅ Changed to home page
-          navigate('/', { replace: true });
+          await redirectUser(result.user);
         } else {
           toast.error(result.error || 'Failed to create account');
         }
@@ -64,14 +76,13 @@ export default function Login() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    
+
     try {
       const result = await signInWithGoogle();
-      
-      if (result.success) {
+
+      if (result.success && result.user) {
         toast.success('Signed in with Google! 🎉');
-        // ✅ Changed to home page
-        navigate('/', { replace: true });
+        await redirectUser(result.user);
       } else {
         toast.error(result.error || 'Google sign-in failed');
       }
@@ -84,7 +95,7 @@ export default function Login() {
   };
 
   return (
-    <motion.main 
+    <motion.main
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
@@ -92,28 +103,37 @@ export default function Login() {
     >
       <div className="w-full max-w-md bg-white border border-zinc-200 rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_60px_rgb(0,0,0,0.06)] relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-zinc-200 via-zinc-800 to-zinc-200"></div>
+
         <div className="flex items-center justify-center w-16 h-16 bg-zinc-100 rounded-full mb-8 mx-auto border border-zinc-200">
           <User className="w-6 h-6 text-zinc-600" />
         </div>
+
         <h1 className="text-3xl font-serif font-bold text-center text-text mb-2 tracking-wide">
           {isLogin ? 'Welcome Back' : 'Join ELVERA'}
         </h1>
+
         <p className="text-center text-zinc-500 text-sm font-medium mb-10 tracking-wide">
-          {isLogin ? 'Access your saved pieces and click history' : 'Create an account to save pieces'}
+          {isLogin
+            ? 'Access your saved pieces and click history'
+            : 'Create an account to save pieces'}
         </p>
 
         <div className="flex items-center justify-center bg-zinc-100 p-1.5 rounded-capsule mb-8 border border-zinc-200">
-          <button 
+          <button
             onClick={() => setIsLogin(true)}
             disabled={loading}
-            className={`flex-1 py-3 text-xs font-bold tracking-widest uppercase rounded-capsule transition-all ${isLogin ? 'bg-white text-text shadow-sm' : 'text-zinc-500 hover:text-text'}`}
+            className={`flex-1 py-3 text-xs font-bold tracking-widest uppercase rounded-capsule transition-all ${
+              isLogin ? 'bg-white text-text shadow-sm' : 'text-zinc-500 hover:text-text'
+            }`}
           >
             Login
           </button>
-          <button 
+          <button
             onClick={() => setIsLogin(false)}
             disabled={loading}
-            className={`flex-1 py-3 text-xs font-bold tracking-widest uppercase rounded-capsule transition-all ${!isLogin ? 'bg-white text-text shadow-sm' : 'text-zinc-500 hover:text-text'}`}
+            className={`flex-1 py-3 text-xs font-bold tracking-widest uppercase rounded-capsule transition-all ${
+              !isLogin ? 'bg-white text-text shadow-sm' : 'text-zinc-500 hover:text-text'
+            }`}
           >
             Sign Up
           </button>
@@ -122,9 +142,11 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           {!isLogin && (
             <div>
-              <label className="block text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2">Full Name</label>
-              <input 
-                type="text" 
+              <label className="block text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
                 required={!isLogin}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -134,11 +156,14 @@ export default function Login() {
               />
             </div>
           )}
+
           <div>
-            <label className="block text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2">Email Address</label>
-            <input 
-              type="email" 
-              required 
+            <label className="block text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2">
+              Email Address
+            </label>
+            <input
+              type="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -146,11 +171,14 @@ export default function Login() {
               placeholder="you@example.com"
             />
           </div>
+
           <div>
-            <label className="block text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2">Password</label>
-            <input 
-              type="password" 
-              required 
+            <label className="block text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
@@ -158,24 +186,26 @@ export default function Login() {
               placeholder="••••••••"
             />
           </div>
-          <button 
-            type="submit" 
+
+          <button
+            type="submit"
             disabled={loading}
             className="w-full mt-4 flex items-center justify-center gap-3 bg-text text-white px-8 py-5 rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-800 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
           >
-            {loading ? 'PLEASE WAIT...' : (isLogin ? 'LOG IN' : 'CREATE ACCOUNT')} 
+            {loading ? 'PLEASE WAIT...' : isLogin ? 'LOG IN' : 'CREATE ACCOUNT'}
             {!loading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
           </button>
         </form>
 
-        {/* Google Sign In Button */}
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-zinc-200"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-zinc-400 font-bold tracking-widest">Or continue with</span>
+              <span className="bg-white px-2 text-zinc-400 font-bold tracking-widest">
+                Or continue with
+              </span>
             </div>
           </div>
 
