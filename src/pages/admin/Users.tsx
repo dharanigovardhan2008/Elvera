@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 interface UserItem {
@@ -11,15 +11,22 @@ interface UserItem {
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [adminIds, setAdminIds] = useState<string[]>([]);
 
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const snapshot = await getDocs(collection(db, 'users'));
-        const list: UserItem[] = snapshot.docs.map((doc) => ({
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const adminsSnapshot = await getDocs(collection(db, 'admins'));
+
+        const admins = adminsSnapshot.docs.map((doc) => doc.id);
+        setAdminIds(admins);
+
+        const list: UserItem[] = usersSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...(doc.data() as Omit<UserItem, 'id'>),
         }));
+
         setUsers(list);
       } catch (error) {
         console.error(error);
@@ -35,7 +42,7 @@ export default function AdminUsers() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-serif font-bold text-text">Users</h1>
-        <p className="text-zinc-500 mt-1">View registered users</p>
+        <p className="text-zinc-500 mt-1">View registered users and admin access</p>
       </div>
 
       <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden">
@@ -45,20 +52,37 @@ export default function AdminUsers() {
           <div className="p-10 text-center text-zinc-500">No users found</div>
         ) : (
           <div className="divide-y divide-zinc-200">
-            {users.map((user) => (
-              <div
-                key={user.id}
-                className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-2"
-              >
-                <div>
-                  <p className="font-medium text-text">
-                    {user.displayName || 'Unnamed User'}
-                  </p>
-                  <p className="text-sm text-zinc-500">{user.email || 'No email'}</p>
+            {users.map((user) => {
+              const isAdmin = adminIds.includes(user.id);
+
+              return (
+                <div
+                  key={user.id}
+                  className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+                >
+                  <div>
+                    <p className="font-medium text-text">
+                      {user.displayName || 'Unnamed User'}
+                    </p>
+                    <p className="text-sm text-zinc-500">{user.email || 'No email'}</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        isAdmin
+                          ? 'bg-black text-white'
+                          : 'bg-zinc-100 text-zinc-700'
+                      }`}
+                    >
+                      {isAdmin ? 'Admin' : 'User'}
+                    </span>
+
+                    <span className="text-xs text-zinc-400 break-all">{user.id}</span>
+                  </div>
                 </div>
-                <div className="text-xs text-zinc-400 break-all">{user.id}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
