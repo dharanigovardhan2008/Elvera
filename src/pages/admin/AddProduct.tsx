@@ -141,7 +141,6 @@ export default function AddProduct() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/admin/products')}
@@ -155,12 +154,10 @@ export default function AddProduct() {
         </div>
       </div>
 
-      {/* Form */}
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-xl border border-gray-200 p-6 space-y-6"
       >
-        {/* Basic Information */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Basic Information</h2>
 
@@ -226,7 +223,6 @@ export default function AddProduct() {
           </div>
         </div>
 
-        {/* Category & Classification */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Category & Classification</h2>
 
@@ -302,7 +298,6 @@ export default function AddProduct() {
           </div>
         </div>
 
-        {/* Images */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Product Images *</h2>
 
@@ -352,7 +347,6 @@ export default function AddProduct() {
           {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
 
-        {/* Additional Details */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Additional Details</h2>
 
@@ -440,7 +434,6 @@ export default function AddProduct() {
           </div>
         </div>
 
-        {/* Submit Button */}
         <div className="flex items-center gap-4 pt-6 border-t border-gray-200">
           <button
             type="button"
