@@ -69,38 +69,42 @@ export default function Home() {
       exit="hidden"
       className="min-h-screen pt-24 pb-20 overflow-hidden"
     >
+      {/* --- HERO SECTION (UPDATED FOR HIGH CONTRAST & VISIBILITY) --- */}
       <section className="relative px-6 lg:px-12 max-w-7xl mx-auto mb-32 h-[80vh] min-h-[600px] flex flex-col justify-center">
-        <div className="absolute inset-0 rounded-[3rem] overflow-hidden -z-10 bg-zinc-100">
-          <img
-            src="https://images.unsplash.com/photo-1617391654484-2996fbff4a86?auto=format&fit=crop&q=80&w=2000"
-            alt="Hero Background"
-            className="w-full h-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10"></div>
+        {/* Clean, subtle background instead of heavy image */}
+        <div className="absolute inset-0 rounded-[3rem] overflow-hidden -z-10 bg-white shadow-[0_4px_40px_rgb(0,0,0,0.03)] border border-zinc-100">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-50 via-white to-white"></div>
         </div>
 
         <motion.div variants={fadeUp} className="relative z-10 flex flex-col items-center text-center px-4">
-          <span className="mb-6 px-6 py-2 rounded-capsule bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold tracking-[0.2em] uppercase shadow-lg">
+          <span className="mb-6 px-6 py-2 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs font-bold tracking-[0.2em] uppercase shadow-sm">
             Curated Menswear
           </span>
-          <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-serif font-semibold text-white tracking-widest leading-none mb-6 text-balance drop-shadow-xl">
+          
+          {/* Changed text-white to text-zinc-900 (Black) */}
+          <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-serif font-semibold text-zinc-900 tracking-widest leading-none mb-6 text-balance drop-shadow-sm">
             ELVERA
           </h1>
-          <p className="text-lg md:text-2xl text-zinc-200 font-medium tracking-wide max-w-2xl mb-12 text-balance drop-shadow-md">
+          
+          {/* Changed text-zinc-200 to text-zinc-600 (Dark Gray) */}
+          <p className="text-lg md:text-2xl text-zinc-600 font-medium tracking-wide max-w-2xl mb-12 text-balance">
             Dress like no one else. The finest curation of premium fashion from trusted platforms.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+            {/* Primary Button: Black Background, White Text */}
             <Link
               to="/shop"
-              className="group px-10 py-5 bg-white text-text rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-100 transition-all flex items-center gap-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+              className="group px-10 py-5 bg-zinc-900 text-white rounded-full text-sm font-bold tracking-widest hover:bg-zinc-800 transition-all flex items-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
               SHOP COLLECTION
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
+            
+            {/* Secondary Button: White Background, Black Text, Border */}
             <Link
               to="/combos"
-              className="group px-10 py-5 bg-black/30 backdrop-blur-md text-white border border-white/20 rounded-capsule text-sm font-bold tracking-widest hover:bg-white/40 transition-all flex items-center gap-3"
+              className="group px-10 py-5 bg-white text-zinc-900 border-2 border-zinc-200 rounded-full text-sm font-bold tracking-widest hover:border-zinc-900 hover:bg-zinc-50 transition-all flex items-center gap-3"
             >
               VIEW OUTFITS
             </Link>
@@ -108,6 +112,7 @@ export default function Home() {
         </motion.div>
       </section>
 
+      {/* --- REMAINDER OF YOUR PAGE STAYS EXACTLY THE SAME --- */}
       <section className="px-6 lg:px-12 max-w-7xl mx-auto mb-32">
         <motion.div
           variants={fadeUp}
@@ -120,13 +125,13 @@ export default function Home() {
             <div className="flex items-center gap-3 text-zinc-500 mb-4 font-bold tracking-widest text-xs uppercase">
               <Sparkles className="w-4 h-4" /> Discover
             </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-text">
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-zinc-900">
               Shop by Category
             </h2>
           </div>
           <Link
             to="/shop"
-            className="hidden md:flex items-center gap-2 text-sm font-bold tracking-widest text-text hover:text-zinc-500 transition-colors uppercase"
+            className="hidden md:flex items-center gap-2 text-sm font-bold tracking-widest text-zinc-900 hover:text-zinc-500 transition-colors uppercase"
           >
             All Categories <ArrowRight className="w-4 h-4" />
           </Link>
@@ -175,13 +180,13 @@ export default function Home() {
             <div className="flex items-center gap-3 text-zinc-500 mb-4 font-bold tracking-widest text-xs uppercase">
               <TrendingUp className="w-4 h-4" /> Trending
             </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-text">
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-zinc-900">
               Best Picks This Week
             </h2>
           </div>
           <Link
             to="/shop"
-            className="hidden md:flex items-center gap-2 text-sm font-bold tracking-widest text-text hover:text-zinc-500 transition-colors uppercase"
+            className="hidden md:flex items-center gap-2 text-sm font-bold tracking-widest text-zinc-900 hover:text-zinc-500 transition-colors uppercase"
           >
             View All <ArrowRight className="w-4 h-4" />
           </Link>
@@ -212,7 +217,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="flex flex-col items-center text-center mb-16 px-4"
           >
-            <span className="mb-6 px-6 py-2 rounded-capsule bg-white/10 text-white text-xs font-bold tracking-[0.2em] uppercase border border-white/10">
+            <span className="mb-6 px-6 py-2 rounded-full bg-white/10 text-white text-xs font-bold tracking-[0.2em] uppercase border border-white/10">
               Style Guide
             </span>
             <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6">
@@ -240,7 +245,7 @@ export default function Home() {
           <div className="mt-16 text-center">
             <Link
               to="/combos"
-              className="inline-flex items-center gap-3 px-10 py-5 bg-white text-text rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-100 transition-all shadow-xl group"
+              className="inline-flex items-center gap-3 px-10 py-5 bg-white text-zinc-900 rounded-full text-sm font-bold tracking-widest hover:bg-zinc-100 transition-all shadow-xl group"
             >
               EXPLORE ALL OUTFITS
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
