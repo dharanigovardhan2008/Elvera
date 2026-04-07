@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { productsService } from '@/lib/firebase/products';
 import { useImageUpload } from '@/hooks/useImageUpload';
-import toast from 'react-hot-toast';
 
 export default function AddProduct() {
   const navigate = useNavigate();
-  const { uploadMultiple, uploading } = useImageUpload();
+  const { uploadMultiple, uploading, error } = useImageUpload();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -20,30 +20,56 @@ export default function AddProduct() {
     affiliateLink: '',
     rating: '4.5',
     reviews: '0',
-    sizes: [] as string[],
-    colors: [] as string[],
+    sizes: '',
+    colors: '',
     inStock: true,
     featured: false,
   });
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const target = e.target as HTMLInputElement;
+    const { name, value, type } = target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? target.checked : value,
+    }));
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setSelectedFiles([...selectedFiles, ...files]);
+    if (!files.length) return;
+
+    setSelectedFiles((prev) => [...prev, ...files]);
 
     const newPreviews = files.map((file) => URL.createObjectURL(file));
-    setPreviews([...previews, ...newPreviews]);
+    setPreviews((prev) => [...prev, ...newPreviews]);
   };
 
   const removeImage = (index: number) => {
-    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
-    setPreviews(previews.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const getPriceRange = (price: number) => {
+    if (price <= 1000) return 'under-1000';
+    if (price <= 1500) return 'under-1500';
+    return 'under-2000';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.title || !formData.description || !formData.price || !formData.affiliateLink) {
+      toast.error('Please fill all required fields');
+      return;
+    }
 
     if (selectedFiles.length === 0) {
       toast.error('Please upload at least one product image');
@@ -51,26 +77,29 @@ export default function AddProduct() {
     }
 
     try {
-      toast.loading('Uploading images...');
+      setSaving(true);
+      toast.loading('Uploading images...', { id: 'add-product' });
 
-      // Upload images to Cloudinary
       const uploadedImages = await uploadMultiple(selectedFiles, 'products');
 
-      if (uploadedImages.length === 0) {
-        toast.dismiss();
-        toast.error('Failed to upload images');
+      if (!uploadedImages.length) {
+        toast.error('Failed to upload images', { id: 'add-product' });
+        setSaving(false);
         return;
       }
 
-      toast.dismiss();
-      toast.loading('Creating product...');
+      toast.loading('Creating product...', { id: 'add-product' });
 
-      // Calculate discount
       const price = parseFloat(formData.price);
-      const originalPrice = parseFloat(formData.originalPrice) || price;
-      const discount = Math.round(((originalPrice - price) / originalPrice) * 100);
+      const originalPrice = formData.originalPrice
+        ? parseFloat(formData.originalPrice)
+        : price;
 
-      // Create product
+      const discount =
+        originalPrice > price
+          ? Math.round(((originalPrice - price) / originalPrice) * 100)
+          : 0;
+
       const productId = await productsService.addProduct({
         title: formData.title,
         description: formData.description,
@@ -78,30 +107,35 @@ export default function AddProduct() {
         originalPrice,
         discount,
         category: formData.category as any,
-        priceRange: formData.priceRange as any,
+        priceRange: getPriceRange(price) as any,
         platform: formData.platform as any,
         affiliateLink: formData.affiliateLink,
         images: uploadedImages,
-        rating: parseFloat(formData.rating),
-        reviews: parseInt(formData.reviews),
-        sizes: formData.sizes,
-        colors: formData.colors,
+        rating: parseFloat(formData.rating) || 4.5,
+        reviews: parseInt(formData.reviews) || 0,
+        sizes: formData.sizes
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+        colors: formData.colors
+          .split(',')
+          .map((c) => c.trim())
+          .filter(Boolean),
         inStock: formData.inStock,
         featured: formData.featured,
       });
 
-      toast.dismiss();
-
       if (productId) {
-        toast.success('Product created successfully!');
+        toast.success('Product created successfully!', { id: 'add-product' });
         navigate('/admin/products');
       } else {
-        toast.error('Failed to create product');
+        toast.error('Failed to create product', { id: 'add-product' });
       }
     } catch (error) {
       console.error('Error creating product:', error);
-      toast.dismiss();
-      toast.error('Error creating product');
+      toast.error('Error creating product', { id: 'add-product' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -122,7 +156,10 @@ export default function AddProduct() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-xl border border-gray-200 p-6 space-y-6"
+      >
         {/* Basic Information */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Basic Information</h2>
@@ -133,9 +170,10 @@ export default function AddProduct() {
             </label>
             <input
               type="text"
+              name="title"
               required
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
               placeholder="e.g., Classic White Shirt"
             />
@@ -146,10 +184,11 @@ export default function AddProduct() {
               Description *
             </label>
             <textarea
+              name="description"
               required
               rows={3}
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
               placeholder="Product description..."
             />
@@ -162,9 +201,10 @@ export default function AddProduct() {
               </label>
               <input
                 type="number"
+                name="price"
                 required
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                 placeholder="899"
               />
@@ -176,8 +216,9 @@ export default function AddProduct() {
               </label>
               <input
                 type="number"
+                name="originalPrice"
                 value={formData.originalPrice}
-                onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                 placeholder="1499"
               />
@@ -195,9 +236,10 @@ export default function AddProduct() {
                 Category *
               </label>
               <select
+                name="category"
                 required
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
               >
                 <option value="shirts">Shirts</option>
@@ -211,12 +253,12 @@ export default function AddProduct() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price Range *
+                Price Range
               </label>
               <select
-                required
+                name="priceRange"
                 value={formData.priceRange}
-                onChange={(e) => setFormData({ ...formData, priceRange: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
               >
                 <option value="under-1000">Under ₹1,000</option>
@@ -230,9 +272,10 @@ export default function AddProduct() {
                 Platform *
               </label>
               <select
+                name="platform"
                 required
                 value={formData.platform}
-                onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
               >
                 <option value="amazon">Amazon</option>
@@ -249,9 +292,10 @@ export default function AddProduct() {
             </label>
             <input
               type="url"
+              name="affiliateLink"
               required
               value={formData.affiliateLink}
-              onChange={(e) => setFormData({ ...formData, affiliateLink: e.target.value })}
+              onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
               placeholder="https://amazon.in/..."
             />
@@ -284,8 +328,15 @@ export default function AddProduct() {
           {previews.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {previews.map((preview, index) => (
-                <div key={index} className="relative group aspect-square rounded-lg overflow-hidden">
-                  <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                <div
+                  key={index}
+                  className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200"
+                >
+                  <img
+                    src={preview}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
@@ -297,6 +348,8 @@ export default function AddProduct() {
               ))}
             </div>
           )}
+
+          {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
 
         {/* Additional Details */}
@@ -310,11 +363,12 @@ export default function AddProduct() {
               </label>
               <input
                 type="number"
+                name="rating"
                 step="0.1"
                 min="1"
                 max="5"
                 value={formData.rating}
-                onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
               />
             </div>
@@ -325,8 +379,9 @@ export default function AddProduct() {
               </label>
               <input
                 type="number"
+                name="reviews"
                 value={formData.reviews}
-                onChange={(e) => setFormData({ ...formData, reviews: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
               />
             </div>
@@ -338,10 +393,10 @@ export default function AddProduct() {
             </label>
             <input
               type="text"
+              name="sizes"
+              value={formData.sizes}
+              onChange={handleChange}
               placeholder="S, M, L, XL"
-              onChange={(e) =>
-                setFormData({ ...formData, sizes: e.target.value.split(',').map((s) => s.trim()) })
-              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
             />
           </div>
@@ -352,10 +407,10 @@ export default function AddProduct() {
             </label>
             <input
               type="text"
+              name="colors"
+              value={formData.colors}
+              onChange={handleChange}
               placeholder="Black, White, Blue"
-              onChange={(e) =>
-                setFormData({ ...formData, colors: e.target.value.split(',').map((c) => c.trim()) })
-              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
             />
           </div>
@@ -364,8 +419,9 @@ export default function AddProduct() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
+                name="inStock"
                 checked={formData.inStock}
-                onChange={(e) => setFormData({ ...formData, inStock: e.target.checked })}
+                onChange={handleChange}
                 className="w-4 h-4 text-black focus:ring-black border-gray-300 rounded"
               />
               <span className="text-sm font-medium text-gray-700">In Stock</span>
@@ -374,8 +430,9 @@ export default function AddProduct() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
+                name="featured"
                 checked={formData.featured}
-                onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                onChange={handleChange}
                 className="w-4 h-4 text-black focus:ring-black border-gray-300 rounded"
               />
               <span className="text-sm font-medium text-gray-700">Featured Product</span>
@@ -394,10 +451,10 @@ export default function AddProduct() {
           </button>
           <button
             type="submit"
-            disabled={uploading}
+            disabled={uploading || saving}
             className="flex-1 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {uploading ? 'Uploading...' : 'Create Product'}
+            {uploading || saving ? 'Uploading...' : 'Create Product'}
           </button>
         </div>
       </form>
