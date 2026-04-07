@@ -1,7 +1,8 @@
 import { Heart, ShoppingBag, Star, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
-import { Link } from 'react-router-dom';
+import { useAuthContext } from '../context/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Product {
   id: string;
@@ -17,14 +18,46 @@ interface Product {
 
 export default function ProductCard({ product }: { product: Product }) {
   const { toggleFavorite, toggleBag, favorites, bag, trackClick } = useAppContext();
+  const { user } = useAuthContext(); // ✅ Get user from AuthContext
+  const navigate = useNavigate();
 
   const isFav = favorites.includes(product.id);
   const inBag = bag.includes(product.id);
 
+  // ✅ Handle favorite click with login check
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // ✅ Require login (pass true)
+    const success = await toggleFavorite(product.id, true);
+
+    // ✅ If not logged in, redirect to login
+    if (!success && !user) {
+      navigate('/login');
+    }
+  };
+
+  // ✅ Handle bag click with login check
+  const handleBagClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // ✅ Require login (pass true)
+    const success = await toggleBag(product.id, true);
+
+    // ✅ If not logged in, redirect to login
+    if (!success && !user) {
+      navigate('/login');
+    }
+  };
+
   const handleBuy = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    trackClick(product.id, product.platform);
+    
+    // ✅ Fixed: Added productTitle parameter
+    trackClick(product.id, product.title, product.platform);
     window.open(product.affiliateLink, '_blank');
   };
 
@@ -52,14 +85,17 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         </div>
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+          {/* ✅ Fixed favorite button */}
           <button 
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(product.id); }}
+            onClick={handleFavoriteClick}
             className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${isFav ? 'bg-black text-white' : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black'}`}
           >
             <Heart className="w-4 h-4" fill={isFav ? "currentColor" : "none"} />
           </button>
+          
+          {/* ✅ Fixed bag button */}
           <button 
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBag(product.id); }}
+            onClick={handleBagClick}
             className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${inBag ? 'bg-black text-white' : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black'}`}
           >
             <ShoppingBag className="w-4 h-4" fill={inBag ? "currentColor" : "none"} />
