@@ -31,6 +31,7 @@ export default function Shop() {
             product.platform?.charAt(0).toUpperCase() + product.platform?.slice(1),
           affiliateLink: product.affiliateLink,
           imageUrl: product.images?.[0]?.url || '',
+          publicId: product.images?.[0]?.publicId || '',
           rating: product.rating || 4.5,
           reviewCount: product.reviews || 0,
         }));
@@ -89,7 +90,9 @@ export default function Shop() {
           <h1 className="text-4xl md:text-6xl font-serif font-bold text-text mb-4">
             {activeCategory === 'All' ? 'Complete Collection' : activeCategory}
           </h1>
-          <p className="text-zinc-500 font-medium">Showing {filteredProducts.length} premium pieces</p>
+          <p className="text-zinc-500 font-medium">
+            Showing {filteredProducts.length} premium pieces
+          </p>
         </div>
 
         <button
@@ -110,7 +113,9 @@ export default function Shop() {
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div className="space-y-4">
-                <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">Category</h3>
+                <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">
+                  Category
+                </h3>
                 <div className="flex flex-col gap-2">
                   {['All', ...categories].map((cat) => (
                     <button
@@ -120,7 +125,9 @@ export default function Shop() {
                         setSearchParams({ category: cat });
                       }}
                       className={`text-left text-sm font-medium transition-colors ${
-                        activeCategory === cat ? 'text-text font-bold' : 'text-zinc-500 hover:text-text'
+                        activeCategory === cat
+                          ? 'text-text font-bold'
+                          : 'text-zinc-500 hover:text-text'
                       }`}
                     >
                       {cat}
@@ -130,14 +137,18 @@ export default function Shop() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">Price Range</h3>
+                <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">
+                  Price Range
+                </h3>
                 <div className="flex flex-col gap-2">
                   {['All', 'Under ₹1000', 'Under ₹2000', 'Above ₹2000'].map((price) => (
                     <button
                       key={price}
                       onClick={() => setPriceFilter(price)}
                       className={`text-left text-sm font-medium transition-colors ${
-                        priceFilter === price ? 'text-text font-bold' : 'text-zinc-500 hover:text-text'
+                        priceFilter === price
+                          ? 'text-text font-bold'
+                          : 'text-zinc-500 hover:text-text'
                       }`}
                     >
                       {price}
@@ -147,7 +158,9 @@ export default function Shop() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">Platform</h3>
+                <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">
+                  Platform
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {['All', ...platforms].map((platform) => (
                     <button
@@ -166,19 +179,25 @@ export default function Shop() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">Sort By</h3>
+                <h3 className="font-bold text-xs tracking-widest text-zinc-400 uppercase">
+                  Sort By
+                </h3>
                 <div className="flex flex-col gap-2">
-                  {['Recommended', 'Price: Low to High', 'Price: High to Low', 'Top Rated'].map((sort) => (
-                    <button
-                      key={sort}
-                      onClick={() => setSortBy(sort)}
-                      className={`text-left text-sm font-medium transition-colors ${
-                        sortBy === sort ? 'text-text font-bold' : 'text-zinc-500 hover:text-text'
-                      }`}
-                    >
-                      {sort}
-                    </button>
-                  ))}
+                  {['Recommended', 'Price: Low to High', 'Price: High to Low', 'Top Rated'].map(
+                    (sort) => (
+                      <button
+                        key={sort}
+                        onClick={() => setSortBy(sort)}
+                        className={`text-left text-sm font-medium transition-colors ${
+                          sortBy === sort
+                            ? 'text-text font-bold'
+                            : 'text-zinc-500 hover:text-text'
+                        }`}
+                      >
+                        {sort}
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
             </div>
