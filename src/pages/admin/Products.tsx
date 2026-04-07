@@ -147,13 +147,13 @@ export default function AdminProducts() {
                     <ExternalLink className="w-4 h-4" />
                   </a>
 
-                  <button
+                  <Link
+                    to={`/admin/products/edit/${product.id}`}
                     className="p-3 rounded-2xl border border-zinc-200 hover:bg-zinc-50"
                     title="Edit product"
-                    disabled
                   >
                     <Pencil className="w-4 h-4" />
-                  </button>
+                  </Link>
 
                   <button
                     onClick={() => handleDelete(product.id)}
