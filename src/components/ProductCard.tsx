@@ -1,4 +1,5 @@
-import { Heart, ShoppingBag, Star, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, ShoppingBag, Star, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import { useAuthContext } from '../context/AuthContext';
@@ -22,6 +23,9 @@ export default function ProductCard({ product }: { product: Product }) {
   const { toggleFavorite, toggleBag, favorites, bag, trackClick } = useAppContext();
   const { user } = useAuthContext();
   const navigate = useNavigate();
+  
+  // State to track if the image fails to load
+  const [imgError, setImgError] = useState(false);
 
   const isFav = favorites.includes(product.id);
   const inBag = bag.includes(product.id);
@@ -81,14 +85,26 @@ export default function ProductCard({ product }: { product: Product }) {
       whileHover={{ y: -8 }}
       className="group relative flex flex-col bg-white rounded-[2rem] border border-zinc-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)]"
     >
-      <Link to={`/product/${product.id}`} className="block relative aspect-[4/5] overflow-hidden">
-        <img
-          src={finalImageUrl}
-          alt={product.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          loading="lazy"
-        />
+      {/* Added bg-zinc-50 here so the background isn't pure white if the image is missing */}
+      <Link to={`/product/${product.id}`} className="block relative aspect-[4/5] overflow-hidden bg-zinc-50">
+        
+        {/* Conditional Rendering: Show image if it exists and hasn't errored. Show Placeholder otherwise. */}
+        {finalImageUrl && !imgError ? (
+          <img
+            src={finalImageUrl}
+            alt={product.title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
+            onError={() => setImgError(true)} // If image link is broken, trigger error state
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-zinc-300">
+            <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
+            <span className="text-xs font-medium uppercase tracking-widest opacity-50">No Image</span>
+          </div>
+        )}
 
+        {/* Badges and Buttons stay perfectly in place */}
         <div className="absolute top-4 right-4 z-10">
           <span
             className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wide ${
@@ -105,7 +121,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${
               isFav
                 ? 'bg-black text-white'
-                : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black'
+                : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black shadow-sm'
             }`}
           >
             <Heart className="w-4 h-4" fill={isFav ? 'currentColor' : 'none'} />
@@ -116,7 +132,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${
               inBag
                 ? 'bg-black text-white'
-                : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black'
+                : 'bg-white/80 text-zinc-600 hover:bg-white hover:text-black shadow-sm'
             }`}
           >
             <ShoppingBag className="w-4 h-4" fill={inBag ? 'currentColor' : 'none'} />
@@ -132,7 +148,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
 
         <Link to={`/product/${product.id}`} className="block mb-1">
-          <h3 className="font-serif font-semibold text-lg text-text truncate group-hover:underline underline-offset-4 decoration-1">
+          <h3 className="font-serif font-semibold text-lg text-zinc-900 truncate group-hover:underline underline-offset-4 decoration-1">
             {product.title}
           </h3>
         </Link>
@@ -142,13 +158,13 @@ export default function ProductCard({ product }: { product: Product }) {
         </p>
 
         <div className="mt-auto flex items-center justify-between pt-4">
-          <span className="text-xl font-bold tracking-tight text-text">
+          <span className="text-xl font-bold tracking-tight text-zinc-900">
             ₹{product.price.toLocaleString('en-IN')}
           </span>
 
           <button
             onClick={handleBuy}
-            className="flex items-center gap-2 bg-text text-white px-5 py-2.5 rounded-capsule text-sm font-bold tracking-wide hover:bg-zinc-800 transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-2 bg-zinc-900 text-white px-5 py-2.5 rounded-full text-sm font-bold tracking-wide hover:bg-zinc-800 transition-all active:scale-95 shadow-sm"
           >
             BUY <ExternalLink className="w-3.5 h-3.5" />
           </button>
