@@ -9,12 +9,16 @@ import { combosService } from '@/lib/firebase/combos';
 
 const fadeUp: any = {
   hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+  },
 };
 
 const staggerContainer = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 const categories = ['Shirts', 'Pants', 'Jeans', 'Trousers'];
@@ -37,6 +41,7 @@ export default function Home() {
           platform:
             product.platform?.charAt(0).toUpperCase() + product.platform?.slice(1),
           imageUrl: product.images?.[0]?.url || '',
+          publicId: product.images?.[0]?.publicId || '',
           rating: product.rating || 4.5,
           reviewCount: product.reviews || 0,
           affiliateLink: product.affiliateLink,
@@ -86,11 +91,17 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            <Link to="/shop" className="group px-10 py-5 bg-white text-text rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-100 transition-all flex items-center gap-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+            <Link
+              to="/shop"
+              className="group px-10 py-5 bg-white text-text rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-100 transition-all flex items-center gap-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+            >
               SHOP COLLECTION
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link to="/combos" className="group px-10 py-5 bg-black/30 backdrop-blur-md text-white border border-white/20 rounded-capsule text-sm font-bold tracking-widest hover:bg-white/40 transition-all flex items-center gap-3">
+            <Link
+              to="/combos"
+              className="group px-10 py-5 bg-black/30 backdrop-blur-md text-white border border-white/20 rounded-capsule text-sm font-bold tracking-widest hover:bg-white/40 transition-all flex items-center gap-3"
+            >
               VIEW OUTFITS
             </Link>
           </div>
@@ -109,9 +120,14 @@ export default function Home() {
             <div className="flex items-center gap-3 text-zinc-500 mb-4 font-bold tracking-widest text-xs uppercase">
               <Sparkles className="w-4 h-4" /> Discover
             </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-text">Shop by Category</h2>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-text">
+              Shop by Category
+            </h2>
           </div>
-          <Link to="/shop" className="hidden md:flex items-center gap-2 text-sm font-bold tracking-widest text-text hover:text-zinc-500 transition-colors uppercase">
+          <Link
+            to="/shop"
+            className="hidden md:flex items-center gap-2 text-sm font-bold tracking-widest text-text hover:text-zinc-500 transition-colors uppercase"
+          >
             All Categories <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
@@ -125,7 +141,10 @@ export default function Home() {
         >
           {categories.map((cat, idx) => (
             <motion.div key={cat} variants={fadeUp}>
-              <Link to={`/shop?category=${cat}`} className="group relative aspect-[4/5] rounded-[2rem] overflow-hidden block bg-zinc-100 shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-zinc-100">
+              <Link
+                to={`/shop?category=${cat}`}
+                className="group relative aspect-[4/5] rounded-[2rem] overflow-hidden block bg-zinc-100 shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-zinc-100"
+              >
                 <img
                   src={`https://images.unsplash.com/photo-${['1596755094514-f87e34085b2c', '1624378439575-d8705ad7ae80', '1542272454315-4c01d7abdf4a', '1556821840-3a63f95609a7'][idx]}?auto=format&fit=crop&q=80&w=800`}
                   alt={cat}
@@ -156,9 +175,14 @@ export default function Home() {
             <div className="flex items-center gap-3 text-zinc-500 mb-4 font-bold tracking-widest text-xs uppercase">
               <TrendingUp className="w-4 h-4" /> Trending
             </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-text">Best Picks This Week</h2>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-text">
+              Best Picks This Week
+            </h2>
           </div>
-          <Link to="/shop" className="hidden md:flex items-center gap-2 text-sm font-bold tracking-widest text-text hover:text-zinc-500 transition-colors uppercase">
+          <Link
+            to="/shop"
+            className="hidden md:flex items-center gap-2 text-sm font-bold tracking-widest text-text hover:text-zinc-500 transition-colors uppercase"
+          >
             View All <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
@@ -191,7 +215,9 @@ export default function Home() {
             <span className="mb-6 px-6 py-2 rounded-capsule bg-white/10 text-white text-xs font-bold tracking-[0.2em] uppercase border border-white/10">
               Style Guide
             </span>
-            <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6">Complete The Look</h2>
+            <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6">
+              Complete The Look
+            </h2>
             <p className="text-lg text-zinc-400 font-medium max-w-2xl text-balance">
               Hand-picked, fully styled outfits. Shop the entire look across multiple platforms with a single click.
             </p>
@@ -212,8 +238,12 @@ export default function Home() {
           </motion.div>
 
           <div className="mt-16 text-center">
-            <Link to="/combos" className="inline-flex items-center gap-3 px-10 py-5 bg-white text-text rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-100 transition-all shadow-xl group">
-              EXPLORE ALL OUTFITS <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <Link
+              to="/combos"
+              className="inline-flex items-center gap-3 px-10 py-5 bg-white text-text rounded-capsule text-sm font-bold tracking-widest hover:bg-zinc-100 transition-all shadow-xl group"
+            >
+              EXPLORE ALL OUTFITS
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
