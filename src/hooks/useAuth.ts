@@ -13,10 +13,15 @@ export const useAuth = () => {
       setUser(user);
 
       if (user) {
-        console.log('CHECKING ADMIN FOR UID:', user.uid);
-        const adminStatus = await authService.isAdmin(user.uid);
-        console.log('ADMIN STATUS:', adminStatus);
-        setIsAdmin(adminStatus);
+        try {
+          console.log('CHECKING ADMIN FOR UID:', user.uid);
+          const adminStatus = await authService.isAdmin(user.uid);
+          console.log('ADMIN STATUS:', adminStatus);
+          setIsAdmin(adminStatus);
+        } catch (error) {
+          console.error('ADMIN CHECK FAILED:', error);
+          setIsAdmin(false);
+        }
       } else {
         setIsAdmin(false);
       }
